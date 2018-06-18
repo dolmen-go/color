@@ -122,7 +122,9 @@ func (c RGB) MarshalJSON() ([]byte, error) {
 	b := make([]byte, 1, 1+3+1+3+1+3+1)
 	b[0] = '['
 	b = strconv.AppendUint(b, uint64(c.R), 10)
+	b = append(b, ',')
 	b = strconv.AppendUint(b, uint64(c.G), 10)
+	b = append(b, ',')
 	b = strconv.AppendUint(b, uint64(c.B), 10)
 	b = append(b, ']')
 	return b, nil
