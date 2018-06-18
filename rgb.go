@@ -17,7 +17,7 @@ type success bool
 
 const ok success = true
 
-func (ok success) scan(b byte) (uint8, success) {
+func (ok success) nibble(b byte) (uint8, success) {
 	if !ok {
 		return 0, false
 	}
@@ -42,7 +42,7 @@ func (ok success) scan(b byte) (uint8, success) {
 }
 
 func (ok success) h(b byte, target *uint8) success {
-	n, ok := ok.scan(b)
+	n, ok := ok.nibble(b)
 	if !ok {
 		return ok
 	}
@@ -51,11 +51,11 @@ func (ok success) h(b byte, target *uint8) success {
 }
 
 func (ok success) hh(b1, b2 byte, target *uint8) success {
-	n1, ok := ok.scan(b1)
+	n1, ok := ok.nibble(b1)
 	if !ok {
 		return ok
 	}
-	n2, ok := ok.scan(b2)
+	n2, ok := ok.nibble(b2)
 	if !ok {
 		return ok
 	}
