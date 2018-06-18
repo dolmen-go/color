@@ -42,7 +42,7 @@ func ExampleRGB_Set() {
 }
 
 func ExampleRGB_MarshalJSON() {
-	var c color.RGB
+	var c, d color.RGB
 	for _, s := range []string{
 		"#000",
 		"#123",
@@ -56,6 +56,13 @@ func ExampleRGB_MarshalJSON() {
 			panic(err)
 		}
 		fmt.Printf("%s\n", b)
+		err = json.Unmarshal(b, &d)
+		if err != nil {
+			panic(err)
+		}
+		if c != d {
+			panic("roundtrip failure!")
+		}
 	}
 
 	// Output:

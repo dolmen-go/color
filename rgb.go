@@ -1,6 +1,7 @@
 package color
 
 import (
+	"encoding/json"
 	"errors"
 	"strconv"
 )
@@ -128,4 +129,24 @@ func (c RGB) MarshalJSON() ([]byte, error) {
 	b = strconv.AppendUint(b, uint64(c.B), 10)
 	b = append(b, ']')
 	return b, nil
+}
+
+func (c *RGB) UnmarshalJSON(b []byte) error {
+	var a [3]uint16 // We can't directly use [3]uint8 because this is a synonym of [3]byte
+	if err := json.Unmarshal(b, &a); err != nil {
+		return err
+	}
+	if a[0] > 255 {
+		return errors.New("invalid red value")
+	}
+	if a[1] > 255 {
+		return errors.New("invalid green value")
+	}
+	if a[2] > 255 {
+		return errors.New("invalid blue value")
+	}
+	c.R = uint8(a[0])
+	c.G = uint8(a[1])
+	c.B = uint8(a[2])
+	return nil
 }
