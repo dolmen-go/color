@@ -41,25 +41,33 @@ func (ok success) nibble(b byte) (uint8, success) {
 	return b, true
 }
 
-func (ok success) h(b byte, target *uint8) success {
-	n, ok := ok.nibble(b)
-	if !ok {
-		return ok
+func (ok success) h(b string, target []uint8) success {
+	for len(b) >= 1 {
+		n, ok := ok.nibble(b[0])
+		if !ok {
+			return ok
+		}
+		target[0] = (n << 4) | n
+		target = target[1:]
+		b = b[1:]
 	}
-	*target = (n << 4) | n
 	return ok
 }
 
-func (ok success) hh(b1, b2 byte, target *uint8) success {
-	n1, ok := ok.nibble(b1)
-	if !ok {
-		return ok
+func (ok success) hh(src string, target []uint8) success {
+	for len(src) >= 2 {
+		n1, ok := ok.nibble(src[0])
+		if !ok {
+			return ok
+		}
+		n2, ok := ok.nibble(src[1])
+		if !ok {
+			return ok
+		}
+		target[0] = (n1 << 4) | n2
+		target = target[1:]
+		src = src[2:]
 	}
-	n2, ok := ok.nibble(b2)
-	if !ok {
-		return ok
-	}
-	*target = (n1 << 4) | n2
 	return ok
 }
 
@@ -73,6 +81,8 @@ func (c RGB) String() string {
 var ErrInvalidRGB = errors.New("invalid RGB value")
 
 func (c *RGB) Set(s string) error {
+	var done success
+	var b [3]uint8
 	switch len(s) {
 	case 4:
 		if s[0] != '#' {
@@ -81,9 +91,7 @@ func (c *RGB) Set(s string) error {
 		s = s[1:]
 		fallthrough
 	case 3:
-		if ok.h(s[0], &(*c).R).h(s[1], &(*c).G).h(s[2], &(*c).B) {
-			return nil
-		}
+		done = ok.h(s, b[:])
 	case 7:
 		if s[0] != '#' {
 			return ErrInvalidRGB
@@ -91,11 +99,13 @@ func (c *RGB) Set(s string) error {
 		s = s[1:]
 		fallthrough
 	case 6:
-		if ok.hh(s[0], s[1], &(*c).R).hh(s[2], s[3], &(*c).G).hh(s[4], s[5], &(*c).B) {
-			return nil
-		}
+		done = ok.hh(s, b[:])
 	}
-	return ErrInvalidRGB
+	if !done {
+		return ErrInvalidRGB
+	}
+	(*c).R, (*c).G, (*c).B = b[0], b[1], b[2]
+	return nil
 }
 
 func (c RGB) MarshalText() ([]byte, error) {
@@ -106,17 +116,21 @@ func (c RGB) MarshalText() ([]byte, error) {
 }
 
 func (c *RGB) UnmarshalText(s []byte) error {
+	var done success
+	var b [3]uint8
 	switch len(s) {
 	case 3:
-		if ok.h(s[0], &(*c).R).h(s[1], &(*c).G).h(s[2], &(*c).B) {
-			return nil
-		}
+		done = ok.h(string(s), b[:])
 	case 6:
-		if ok.hh(s[0], s[1], &(*c).R).hh(s[2], s[3], &(*c).G).hh(s[4], s[5], &(*c).B) {
-			return nil
-		}
+		done = ok.hh(string(s), b[:])
 	}
-	return ErrInvalidRGB
+
+	if !done {
+		return ErrInvalidRGB
+	}
+
+	(*c).R, (*c).G, (*c).B = b[0], b[1], b[2]
+	return nil
 }
 
 func (c RGB) MarshalJSON() ([]byte, error) {
